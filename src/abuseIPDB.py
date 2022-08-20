@@ -12,7 +12,7 @@ class AbuseIpDb:
         # CONFIG_PATH = config
         # CONFIG_PATH = '../configfile.ini'
         config_obj = configparser.ConfigParser()
-        config_obj.read('./configfile.ini')
+        config_obj.read('./config.ini')
         AIPDB_KEY = config_obj["abusedb"]
         # print (AIPDB_KEY["API_KEY"])
 
