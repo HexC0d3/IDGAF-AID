@@ -4,9 +4,7 @@ import argparse
 import textwrap
 import concurrent.futures
 from datetime import datetime
-
-##### ToDO
-# Bulk I/O ips 
+import base64
 
 
 #----- Argument Handling -------
@@ -28,6 +26,21 @@ args = parser.parse_args()
 
 #------------------- ****** ---------------------#
 
+# ---------------- BANNER --------------------
+BANNER = """
+IDGAF-IpR
+Coded by:
+-----------
+  ___        ____ ___      _ _____ 
+ / _ \__  __/ ___/ _ \  __| |___ / 
+| | | \ \/ / |  | | | |/ _` | |_ \ 
+| |_| |>  <| |__| |_| | (_| |___) |
+ \___//_/\_\\\\____\___/ \__,_|____/ 
+                                   
+   
+---------- """
+
+print(BANNER)
 #------------------ CONSTANT Variables ----------
 ip_database = 'abusedb'
 
@@ -71,11 +84,13 @@ if args.ip:
 
 # ------------------------ Operations for File based inputs ------------------------------------------
 elif args.file:
-    print(args.file)
+    #------ TODO -------
+    # 1. Add input file validation/sanitisation
+
     try:                    # Try to get Input File
         in_file = open (args.file,'r')
         ip_list = in_file.read().split()
-        print (ip_list)
+        #print (ip_list)
     except Exception:
         print (Exception)
         exit()
@@ -88,32 +103,35 @@ elif args.file:
     if ip_database == 'abusedb' or ip_database == 'all':
         # -- Open a write mode file --
         rep_abusedb_out_file = open('Outputs/abusedb_'+ datetime.now().strftime("%d-%b-%Y_%H-%M-%S")+'.csv','w')
-        rep_abusedb_out_file.write('Suspect IP,Database used,Abuse Confidence Score,Domain,Country Code,Usage Type,ISP,Hostnames')
+        rep_abusedb_out_file.write('Suspect IP,Database used,Abuse Confidence Score,Domain,Country Code,Usage Type,ISP,Hostnames\n')
     
         db_obj = AbuseIpDb()
         # multiprocess 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             results = executor.map(db_obj.checkIP,ip_list)
 
-            #Debug code
-            # for rep in results:
-            #     print (rep)
-
             #Check for abuseConfidence:
+
+            # ---------- TODO -------
+            # 1. Add exception handling while writing output
+            # 2. Add API Key Rotation [Not sure if this actually required, but its a good way to kill time writing this module]
+            # 2.a Check for Auth error
+            # 2.b If auth error hit: rotate key and continue process
+            # 3. Get an actual life {FML}
+
             for rep in results:
-                if str(rep['data']['abuseConfidenceScore']) == '0':
+                if int(rep['data']['abuseConfidenceScore']) == 0:
                     pass
                 else:
-                    rep_abusedb_out_file(rep['data']['ipAddress']+','+\
+                    rep_abusedb_out_file.write(rep['data']['ipAddress']+','+\
                         ip_database+','+\
                         str(rep['data']['abuseConfidenceScore'])+','+\
                         str(rep['data']['domain'])+','+\
                         str(rep['data']['countryCode'])+','+\
                         str(rep['data']['usageType'])+','+\
                         str(rep['data']['isp'])+','+\
-                        str(rep['data']['hostnames']))
+                        str(rep['data']['hostnames'])+'\n')
+                        
+        
+        print("Abuse IP DB Check Done. Output saved")
 
-
-
-
-# print(ip_database)
